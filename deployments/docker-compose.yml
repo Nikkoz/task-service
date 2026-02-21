@@ -1,0 +1,24 @@
+#Docker Networks
+networks:
+  network:
+    driver: bridge
+
+volumes:
+  db-data:
+
+services:
+  db:
+    image: postgres:latest
+    container_name: ${COMPOSE_PROJECT_NAME}_app_db_1
+    volumes:
+      - db-data:/var/lib/postgresql:rw
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:5432
+    expose:
+      - 5433
+    networks:
+      - network
