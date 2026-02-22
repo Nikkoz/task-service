@@ -1,0 +1,135 @@
+package service
+
+import (
+	"time"
+
+	domain "github.com/Nikkoz/task-service/internal/domain/task"
+	"github.com/Nikkoz/task-service/pkg/context"
+)
+
+type TaskService struct {
+	repo Task
+}
+
+func NewTaskService(repo Task) *TaskService {
+	return &TaskService{repo: repo}
+}
+
+type CreateTaskInput struct {
+	Title       string
+	Description string
+	Status      string
+	DueDate     *time.Time
+}
+
+type UpdateTaskInput struct {
+	Title       string
+	Description string
+	Status      string
+	DueDate     *time.Time
+}
+
+func (s *TaskService) CreateTask(ctx context.Context, in CreateTaskInput) (domain.Task, error) {
+	taskTitle, err := domain.NewTitle(in.Title)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	taskDescription, err := domain.NewDescription(in.Description)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	taskStatus, err := domain.NewStatus(in.Status)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	t := domain.Task{
+		Title:       *taskTitle,
+		Description: *taskDescription,
+		Status:      *taskStatus,
+	}
+
+	if in.DueDate == nil {
+		return s.repo.Create(ctx, t)
+	}
+
+	dueDate, err := domain.NewDueDate(*in.DueDate)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	t.DueDate = dueDate
+
+	return s.repo.Create(ctx, t)
+}
+
+func (s *TaskService) GetTask(ctx context.Context, id uint64) (domain.Task, error) {
+	if id <= 0 {
+		return domain.Task{}, ErrValidation
+	}
+
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *TaskService) ListTasks(ctx context.Context, limit, offset uint64) ([]domain.Task, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	return s.repo.List(ctx, limit, offset)
+}
+
+func (s *TaskService) UpdateTask(ctx context.Context, id uint64, in UpdateTaskInput) (domain.Task, error) {
+	if id <= 0 {
+		return domain.Task{}, ErrValidation
+	}
+
+	taskTitle, err := domain.NewTitle(in.Title)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	taskDescription, err := domain.NewDescription(in.Description)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	taskStatus, err := domain.NewStatus(in.Status)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	t := domain.Task{
+		ID:          id,
+		Title:       *taskTitle,
+		Description: *taskDescription,
+		Status:      *taskStatus,
+	}
+
+	if in.DueDate == nil {
+		return s.repo.Update(ctx, t)
+	}
+
+	dueDate, err := domain.NewDueDate(*in.DueDate)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	t.DueDate = dueDate
+
+	return s.repo.Update(ctx, t)
+}
+
+func (s *TaskService) DeleteTask(ctx context.Context, id uint64) error {
+	if id <= 0 {
+		return ErrValidation
+	}
+
+	return s.repo.Delete(ctx, id)
+}
