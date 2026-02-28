@@ -7,11 +7,11 @@ import (
 
 type DueDate time.Time
 
-var ErrDateInThePast = "`DueDate` must be in the future"
+var ErrDateInThePast = errors.New("`DueDate` must be in the future")
 
 func NewDueDate(dueDate time.Time) (*DueDate, error) {
 	if dueDate.Before(time.Now()) || dueDate.Equal(time.Now()) {
-		return nil, errors.New(ErrDateInThePast)
+		return nil, ErrDateInThePast
 	}
 
 	d := DueDate(dueDate)
