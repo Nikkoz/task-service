@@ -3,11 +3,13 @@ package http
 import (
 	"net/http"
 
+	"github.com/Nikkoz/task-service/internal/config"
+	"github.com/Nikkoz/task-service/internal/transport/http/middlewares"
 	"github.com/Nikkoz/task-service/internal/transport/http/task"
 	"github.com/gin-gonic/gin"
 )
 
-func newRouter(taskHandler *task.Handler, isProd bool) *gin.Engine {
+func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.Engine {
 	if isProd {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -16,7 +18,8 @@ func newRouter(taskHandler *task.Handler, isProd bool) *gin.Engine {
 
 	router := gin.New()
 
-	//router.Use(middlewares.Auth(config.Auth))
+	router.Use(middlewares.Auth(auth))
+	router.Use(middlewares.RequestID())
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{

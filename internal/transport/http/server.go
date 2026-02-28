@@ -20,9 +20,9 @@ type (
 	}
 )
 
-func NewServer(taskService task.Service, isProd bool, o Options) *Server {
+func NewServer(taskService task.Service, isProd bool, auth config.Auth, o Options) *Server {
 	handler := task.NewHandler(taskService)
-	route := newRouter(handler, isProd)
+	route := newRouter(handler, isProd, auth)
 
 	s := &Server{
 		router: route,

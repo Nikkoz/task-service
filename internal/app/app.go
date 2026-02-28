@@ -40,7 +40,8 @@ func Run() {
 		taskRepo    = postgres.NewTaskRepo(db)
 		taskService = service.NewTaskService(taskRepo)
 
-		listenerHttp = http.NewServer(taskService, cfg.App.Environment.IsProduction(), http.Options{})
+		isProduction = cfg.App.Environment.IsProduction()
+		listenerHttp = http.NewServer(taskService, isProduction, cfg.Auth, http.Options{})
 	)
 
 	listenerHttp.Run(cfg.Http)

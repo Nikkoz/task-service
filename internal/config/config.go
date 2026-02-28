@@ -13,6 +13,7 @@ type (
 		App  App  `envPrefix:"APP_"`
 		Http Http `envPrefix:"HTTP_"`
 		Db   Db   `envPrefix:"DB_"`
+		Auth Auth `envPrefix:"AUTH_"`
 		Log  Log  `envPrefix:"LOG_"`
 	}
 
@@ -39,6 +40,10 @@ type (
 		MinConns        int32         `env:"DB_MIN_CONNS" envDefault:"0"`
 		MaxConnLifetime time.Duration `env:"DB_MAX_CONN_LIFETIME" envDefault:"1h"`
 		MaxConnIdleTime time.Duration `env:"DB_MAX_CONN_IDLE_TIME" envDefault:"30m"`
+	}
+
+	Auth struct {
+		Token string `env:"TOKEN,required"`
 	}
 
 	Log struct {
