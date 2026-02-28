@@ -1,9 +1,10 @@
 package postgres
 
 import (
-	"context"
 	"errors"
 
+	"github.com/Nikkoz/task-service/pkg/context"
+	"github.com/Nikkoz/task-service/pkg/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -44,7 +45,7 @@ func (r *TaskRepo) Create(ctx context.Context, t task.Task) (task.Task, error) {
 		&out.UpdatedAt,
 	)
 	if err != nil {
-		return task.Task{}, err
+		return task.Task{}, logger.ErrorWithContext(ctx, err)
 	}
 
 	out.Status = task.Status(status)
@@ -74,7 +75,7 @@ func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return task.Task{}, repository.ErrNotFound
 		}
-		return task.Task{}, err
+		return task.Task{}, logger.ErrorWithContext(ctx, err)
 	}
 
 	out.Status = task.Status(status)
@@ -91,7 +92,7 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 
 	rows, err := r.db.Query(ctx, q, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, logger.ErrorWithContext(ctx, err)
 	}
 	defer rows.Close()
 
@@ -109,7 +110,7 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 			&t.CreatedAt,
 			&t.UpdatedAt,
 		); err != nil {
-			return nil, err
+			return nil, logger.ErrorWithContext(ctx, err)
 		}
 
 		t.Status = task.Status(status)
@@ -117,7 +118,7 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, logger.ErrorWithContext(ctx, err)
 	}
 
 	return out, nil
@@ -156,10 +157,12 @@ func (r *TaskRepo) Update(ctx context.Context, t task.Task) (task.Task, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return task.Task{}, repository.ErrNotFound
 		}
-		return task.Task{}, err
+
+		return task.Task{}, logger.ErrorWithContext(ctx, err)
 	}
 
 	out.Status = task.Status(status)
+
 	return out, nil
 }
 
@@ -168,10 +171,12 @@ func (r *TaskRepo) Delete(ctx context.Context, id uint64) error {
 
 	ct, err := r.db.Exec(ctx, q, id)
 	if err != nil {
-		return err
+		return logger.ErrorWithContext(ctx, err)
 	}
+
 	if ct.RowsAffected() == 0 {
 		return repository.ErrNotFound
 	}
+
 	return nil
 }

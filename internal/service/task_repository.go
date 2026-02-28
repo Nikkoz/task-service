@@ -1,9 +1,8 @@
 package service
 
 import (
-	"context"
-
 	"github.com/Nikkoz/task-service/internal/domain/task"
+	"github.com/Nikkoz/task-service/pkg/context"
 )
 
 type (
