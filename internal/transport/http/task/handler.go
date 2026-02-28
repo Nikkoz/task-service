@@ -18,7 +18,7 @@ func NewHandler(service Service) *Handler {
 }
 
 func (h *Handler) Create(c *gin.Context) {
-	request, err := getRequest(c)
+	req, err := getRequest(c)
 	if err != nil {
 		httpError.SetError(c, http.StatusBadRequest, err)
 
@@ -28,10 +28,10 @@ func (h *Handler) Create(c *gin.Context) {
 	var ctx = context.New(c)
 
 	out, err := h.service.CreateTask(ctx, service.CreateTaskInput{
-		Title:       request.Title,
-		Description: request.Description,
-		Status:      request.Status,
-		DueDate:     request.DueDate,
+		Title:       req.Title,
+		Description: req.Description,
+		Status:      req.Status,
+		DueDate:     req.DueDate,
 	})
 	if err != nil {
 		httpError.SetError(c, http.StatusInternalServerError, err)
@@ -54,7 +54,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	request, err := getRequest(c)
+	req, err := getRequest(c)
 	if err != nil {
 		httpError.SetError(c, http.StatusBadRequest, err)
 
@@ -64,10 +64,10 @@ func (h *Handler) Update(c *gin.Context) {
 	var ctx = context.New(c)
 
 	out, err := h.service.UpdateTask(ctx, taskId.Value, service.UpdateTaskInput{
-		Title:       request.Title,
-		Description: request.Description,
-		Status:      request.Status,
-		DueDate:     request.DueDate,
+		Title:       req.Title,
+		Description: req.Description,
+		Status:      req.Status,
+		DueDate:     req.DueDate,
 	})
 	if err != nil {
 		httpError.SetError(c, http.StatusInternalServerError, err)

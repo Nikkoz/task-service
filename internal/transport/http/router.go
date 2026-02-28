@@ -18,6 +18,8 @@ func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.En
 
 	router := gin.New()
 
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
 	router.Use(middlewares.Auth(auth))
 	router.Use(middlewares.RequestID())
 
