@@ -18,6 +18,8 @@ DB_HOST ?= localhost
 DB_SSLMODE ?= disable
 
 DB_DSN := postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
+
+MOCKERY_VERSION := $(shell go list -m -f '{{.Version}}' github.com/vektra/mockery/v2)
 # -----------------------------
 # Help
 # -----------------------------
@@ -60,3 +62,12 @@ test: ## Run tests
 
 lint: ## Run golangci-lint
 	@golangci-lint run
+
+# -----------------------------
+# Tools
+# -----------------------------
+install-tools:
+	go install github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
+
+generate:
+	go generate ./...

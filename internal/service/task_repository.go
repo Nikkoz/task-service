@@ -5,17 +5,16 @@ import (
 	"github.com/Nikkoz/task-service/pkg/context"
 )
 
-type (
-	Task interface {
-		Create(ctx context.Context, t task.Task) (task.Task, error)
-		Update(ctx context.Context, t task.Task) (task.Task, error)
-		Delete(ctx context.Context, id uint64) error
+//go:generate mockery --name TaskRepository --output ./mocks --outpkg mocks
+type TaskRepository interface {
+	Create(ctx context.Context, t task.Task) (task.Task, error)
+	Update(ctx context.Context, t task.Task) (task.Task, error)
+	Delete(ctx context.Context, id uint64) error
 
-		TaskReader
-	}
+	TaskReaderRepository
+}
 
-	TaskReader interface {
-		GetByID(ctx context.Context, id uint64) (task.Task, error)
-		List(ctx context.Context, limit, offset uint64) ([]task.Task, error)
-	}
-)
+type TaskReaderRepository interface {
+	GetByID(ctx context.Context, id uint64) (task.Task, error)
+	List(ctx context.Context, limit, offset uint64) ([]task.Task, error)
+}

@@ -8,10 +8,10 @@ import (
 )
 
 type TaskService struct {
-	repo Task
+	repo TaskRepository
 }
 
-func NewTaskService(repo Task) *TaskService {
+func NewTaskService(repo TaskRepository) *TaskService {
 	return &TaskService{repo: repo}
 }
 
@@ -65,26 +65,6 @@ func (s *TaskService) CreateTask(ctx context.Context, in CreateTaskInput) (domai
 	return s.repo.Create(ctx, t)
 }
 
-func (s *TaskService) GetTask(ctx context.Context, id uint64) (domain.Task, error) {
-	if id <= 0 {
-		return domain.Task{}, ErrValidation
-	}
-
-	return s.repo.GetByID(ctx, id)
-}
-
-func (s *TaskService) ListTasks(ctx context.Context, limit, offset uint64) ([]domain.Task, error) {
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
-
-	if offset < 0 {
-		offset = 0
-	}
-
-	return s.repo.List(ctx, limit, offset)
-}
-
 func (s *TaskService) UpdateTask(ctx context.Context, id uint64, in UpdateTaskInput) (domain.Task, error) {
 	if id <= 0 {
 		return domain.Task{}, ErrValidation
@@ -124,6 +104,22 @@ func (s *TaskService) UpdateTask(ctx context.Context, id uint64, in UpdateTaskIn
 	t.DueDate = dueDate
 
 	return s.repo.Update(ctx, t)
+}
+
+func (s *TaskService) GetTask(ctx context.Context, id uint64) (domain.Task, error) {
+	if id <= 0 {
+		return domain.Task{}, ErrValidation
+	}
+
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *TaskService) ListTasks(ctx context.Context, limit, offset uint64) ([]domain.Task, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+
+	return s.repo.List(ctx, limit, offset)
 }
 
 func (s *TaskService) DeleteTask(ctx context.Context, id uint64) error {
