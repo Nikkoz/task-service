@@ -1,7 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -65,9 +68,61 @@ func Load() (Config, error) {
 }
 
 func envInit() error {
-	if err := godotenv.Load(); err != nil {
-		return fmt.Errorf("warning: .env not loaded: %v\n", err)
+	envFile := ".env"
+	envFile += os.Getenv("ENV_FILE")
+
+	path, err := resolveEnvFile(envFile)
+	if err != nil {
+		return fmt.Errorf("warning: %s not loaded: %w", envFile, err)
+	}
+
+	if err := godotenv.Load(path); err != nil {
+		return fmt.Errorf("warning: %s not loaded: %v\n", envFile, err)
 	}
 
 	return nil
+}
+
+// resolveEnvFile resolves env file path in a way that works under `go test`
+// where working dir is the package directory. :contentReference[oaicite:1]{index=1}
+func resolveEnvFile(envFile string) (string, error) {
+	// absolute path -> use as is
+	if filepath.IsAbs(envFile) {
+		if _, err := os.Stat(envFile); err != nil {
+			return "", err
+		}
+		return envFile, nil
+	}
+
+	// try relative to current working dir first
+	if _, err := os.Stat(envFile); err == nil {
+		return envFile, nil
+	}
+
+	// walk up directories and look for the file
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	dir := wd
+	for {
+		try := filepath.Join(dir, envFile)
+		if _, err := os.Stat(try); err == nil {
+			return try, nil
+		}
+
+		// optional: stop when we reach module root (go.mod)
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			break
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	return "", errors.New("file not found (searched upward from working directory)")
 }

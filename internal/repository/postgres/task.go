@@ -2,21 +2,20 @@ package postgres
 
 import (
 	"errors"
-
-	"github.com/Nikkoz/task-service/pkg/context"
-	"github.com/Nikkoz/task-service/pkg/logger"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
 
 	"github.com/Nikkoz/task-service/internal/domain/task"
 	"github.com/Nikkoz/task-service/internal/repository"
+	"github.com/Nikkoz/task-service/pkg/context"
+	"github.com/Nikkoz/task-service/pkg/logger"
+	"github.com/jackc/pgx/v5"
 )
 
 type TaskRepo struct {
-	db *pgxpool.Pool
+	db DBTX
 }
 
-func NewTaskRepo(db *pgxpool.Pool) *TaskRepo {
+func NewTaskRepo(db DBTX) *TaskRepo {
 	return &TaskRepo{db: db}
 }
 
@@ -29,18 +28,19 @@ func (r *TaskRepo) Create(ctx context.Context, t task.Task) (task.Task, error) {
 
 	var out task.Task
 	var status string
+	var due *time.Time
 
 	err := r.db.QueryRow(ctx, q,
 		t.Title,
 		t.Description,
 		string(t.Status),
-		t.DueDate,
+		t.DueDate.DateTime(),
 	).Scan(
 		&out.ID,
 		&out.Title,
 		&out.Description,
 		&status,
-		&out.DueDate,
+		&due,
 		&out.CreatedAt,
 		&out.UpdatedAt,
 	)
@@ -49,6 +49,56 @@ func (r *TaskRepo) Create(ctx context.Context, t task.Task) (task.Task, error) {
 	}
 
 	out.Status = task.Status(status)
+	if due != nil {
+		out.DueDate, _ = task.NewDueDate(*due)
+	}
+
+	return out, nil
+}
+
+func (r *TaskRepo) Update(ctx context.Context, t task.Task) (task.Task, error) {
+	const q = `
+		UPDATE tasks
+		SET title = $2,
+		    description = $3,
+		    status = $4,
+		    due_date = $5
+		WHERE id = $1
+		RETURNING id, title, description, status, due_date, created_at, updated_at
+	`
+
+	var out task.Task
+	var status string
+	var due *time.Time
+
+	err := r.db.QueryRow(ctx, q,
+		t.ID,
+		t.Title,
+		t.Description,
+		string(t.Status),
+		t.DueDate.DateTime(),
+	).Scan(
+		&out.ID,
+		&out.Title,
+		&out.Description,
+		&status,
+		&due,
+		&out.CreatedAt,
+		&out.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return task.Task{}, repository.ErrNotFound
+		}
+
+		return task.Task{}, logger.ErrorWithContext(ctx, err)
+	}
+
+	out.Status = task.Status(status)
+	if due != nil {
+		out.DueDate, _ = task.NewDueDate(*due)
+	}
+
 	return out, nil
 }
 
@@ -61,13 +111,14 @@ func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
 
 	var out task.Task
 	var status string
+	var due *time.Time
 
 	err := r.db.QueryRow(ctx, q, id).Scan(
 		&out.ID,
 		&out.Title,
 		&out.Description,
 		&status,
-		&out.DueDate,
+		&due,
 		&out.CreatedAt,
 		&out.UpdatedAt,
 	)
@@ -79,6 +130,10 @@ func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
 	}
 
 	out.Status = task.Status(status)
+	if due != nil {
+		out.DueDate, _ = task.NewDueDate(*due)
+	}
+
 	return out, nil
 }
 
@@ -100,13 +155,14 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 	for rows.Next() {
 		var t task.Task
 		var status string
+		var due *time.Time
 
 		if err := rows.Scan(
 			&t.ID,
 			&t.Title,
 			&t.Description,
 			&status,
-			&t.DueDate,
+			&due,
 			&t.CreatedAt,
 			&t.UpdatedAt,
 		); err != nil {
@@ -114,54 +170,16 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 		}
 
 		t.Status = task.Status(status)
+		if due != nil {
+			t.DueDate, _ = task.NewDueDate(*due)
+		}
+
 		out = append(out, t)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, logger.ErrorWithContext(ctx, err)
 	}
-
-	return out, nil
-}
-
-func (r *TaskRepo) Update(ctx context.Context, t task.Task) (task.Task, error) {
-	const q = `
-		UPDATE tasks
-		SET title = $2,
-		    description = $3,
-		    status = $4,
-		    due_date = $5
-		WHERE id = $1
-		RETURNING id, title, description, status, due_date, created_at, updated_at
-	`
-
-	var out task.Task
-	var status string
-
-	err := r.db.QueryRow(ctx, q,
-		t.ID,
-		t.Title,
-		t.Description,
-		string(t.Status),
-		t.DueDate,
-	).Scan(
-		&out.ID,
-		&out.Title,
-		&out.Description,
-		&status,
-		&out.DueDate,
-		&out.CreatedAt,
-		&out.UpdatedAt,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return task.Task{}, repository.ErrNotFound
-		}
-
-		return task.Task{}, logger.ErrorWithContext(ctx, err)
-	}
-
-	out.Status = task.Status(status)
 
 	return out, nil
 }

@@ -75,7 +75,7 @@ func TestTaskService_UpdateTask_Success(t *testing.T) {
 		Title:       title.String(),
 		Description: descr.String(),
 		Status:      status.String(),
-		DueDate:     &dueDateTime,
+		DueDate:     dueDateTime,
 	}
 
 	repo.
