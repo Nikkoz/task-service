@@ -25,11 +25,6 @@ type (
 		Status      string     `json:"status"`
 		DueDate     *time.Time `json:"due_date"` // allow null
 	}
-
-	pagination struct {
-		Limit uint64 `form:"limit"`
-		Page  uint64 `form:"page"`
-	}
 )
 
 func getRequest(c *gin.Context) (*request, error) {

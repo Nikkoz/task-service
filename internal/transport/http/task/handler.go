@@ -97,7 +97,7 @@ func (h *Handler) Get(c *gin.Context) {
 	out, err := h.service.GetTask(ctx, taskId.Value)
 	if err != nil {
 		code := http.StatusInternalServerError
-		if errors.Is(repository.ErrNotFound, err) {
+		if errors.Is(err, repository.ErrNotFound) {
 			code = http.StatusNotFound
 		}
 
@@ -139,7 +139,7 @@ func (h *Handler) Delete(c *gin.Context) {
 
 	if err := h.service.DeleteTask(ctx, taskId.Value); err != nil {
 		code := http.StatusInternalServerError
-		if errors.Is(repository.ErrNotFound, err) {
+		if errors.Is(err, repository.ErrNotFound) {
 			code = http.StatusNotFound
 		}
 		httpError.SetError(c, code, err)

@@ -1,7 +1,6 @@
 package task
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -9,8 +8,8 @@ import (
 const MaxLength = 100
 
 var (
-	ErrWrongLength = errors.New(fmt.Sprintf("`title` must be less than or equal to %d characters", MaxLength))
-	ErrEmptyTitle  = errors.New("`title` must not be empty")
+	ErrWrongLength = fmt.Errorf("`title` must be less than or equal to %d characters", MaxLength)
+	ErrEmptyTitle  = fmt.Errorf("`title` must not be empty")
 )
 
 type Title string
