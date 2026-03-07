@@ -67,6 +67,9 @@ migrate-create: ## Create new migration (name=xxx)
 test: ## Run tests
 	@$(GO) test ./... -v
 
+test-integration:  ## Run integration tests
+	$(GO) test -tags=integration ./...
+
 lint: ## Run golangci-lint
 	@golangci-lint run
 
