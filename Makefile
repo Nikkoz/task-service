@@ -70,11 +70,19 @@ test: ## Run tests
 lint: ## Run golangci-lint
 	@golangci-lint run
 
+coverage: ## Run coverage
+	$(GO) test -coverprofile=coverage.out ./...
+	$(GO) tool cover -func=coverage.out
+
+coverage-html:  ## Run coverage for html
+	$(GO) test -coverprofile=coverage.out ./...
+	$(GO) tool cover -html=coverage.out
+
 # -----------------------------
 # Tools
 # -----------------------------
 install-tools:
-	go install github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
+	@$(GO) install github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
 
 generate:
-	go generate ./...
+	@$(GO) generate ./...

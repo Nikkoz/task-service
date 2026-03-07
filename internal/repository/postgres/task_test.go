@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -54,13 +55,15 @@ func TestTaskRepo_CreateGet(t *testing.T) {
 
 func TestTaskRepo_List_LimitOffset(t *testing.T) {
 	testutil.WithTx(t, func(ctx context.Context, tx pgx.Tx) {
+		truncate(t, ctx, tx)
+
 		repo := NewTaskRepo(tx)
 		assertion := assert.New(t)
 
 		created := make([]task.Task, 0, 3)
 
 		for i := 1; i <= 3; i++ {
-			title, _ := task.NewTitle("list-" + string(rune(i)))
+			title, _ := task.NewTitle(fmt.Sprintf("list-%d", i))
 			desc, _ := task.NewDescription("description")
 			due, _ := task.NewDueDate(time.Now().Add(time.Duration(i) * time.Hour))
 
@@ -187,4 +190,16 @@ func taskIDs(ts []task.Task) []uint64 {
 		ids[i] = ts[i].ID
 	}
 	return ids
+}
+
+func truncate(t *testing.T, ctx context.Context, tx pgx.Tx) {
+	_, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(424242)`)
+	if err != nil {
+		t.Fatalf("pg_advisory_xact_lock: %v", err)
+	}
+
+	_, err = tx.Exec(ctx, `TRUNCATE TABLE tasks RESTART IDENTITY`)
+	if err != nil {
+		t.Fatalf("truncate tasks: %v", err)
+	}
 }

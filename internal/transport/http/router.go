@@ -29,20 +29,7 @@ func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.En
 		})
 	})
 
-	tasks(router.Group("/tasks"), taskHandler)
+	task.RegisterRoutes(router.Group("/tasks"), taskHandler)
 
 	return router
-}
-
-func tasks(router *gin.RouterGroup, h *task.Handler) {
-	router.POST("", h.Create)
-	router.GET("", h.List)
-
-	oneTask(router.Group("/:id"), h)
-}
-
-func oneTask(router *gin.RouterGroup, h *task.Handler) {
-	router.GET("", h.Get)
-	router.PUT("", h.Update)
-	router.DELETE("", h.Delete)
 }

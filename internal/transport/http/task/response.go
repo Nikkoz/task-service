@@ -14,6 +14,7 @@ type (
 	Short struct {
 		Title       string  `json:"title"`
 		Description string  `json:"description"`
+		Status      string  `json:"status"`
 		DueDate     *string `json:"due_date"`
 	}
 
@@ -30,6 +31,7 @@ func toResponse(task task.Task) *Response {
 	short := Short{
 		Title:       task.Title.String(),
 		Description: task.Description.String(),
+		Status:      task.Status.String(),
 	}
 
 	if task.DueDate != nil {

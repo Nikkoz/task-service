@@ -126,6 +126,7 @@ func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return task.Task{}, repository.ErrNotFound
 		}
+
 		return task.Task{}, logger.ErrorWithContext(ctx, err)
 	}
 

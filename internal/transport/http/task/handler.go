@@ -1,8 +1,10 @@
 package task
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/Nikkoz/task-service/internal/repository"
 	"github.com/Nikkoz/task-service/internal/service"
 	httpError "github.com/Nikkoz/task-service/internal/transport/http/error"
 	"github.com/Nikkoz/task-service/pkg/context"
@@ -94,7 +96,12 @@ func (h *Handler) Get(c *gin.Context) {
 
 	out, err := h.service.GetTask(ctx, taskId.Value)
 	if err != nil {
-		httpError.SetError(c, http.StatusInternalServerError, err)
+		code := http.StatusInternalServerError
+		if errors.Is(repository.ErrNotFound, err) {
+			code = http.StatusNotFound
+		}
+
+		httpError.SetError(c, code, err)
 
 		return
 	}
@@ -131,7 +138,11 @@ func (h *Handler) Delete(c *gin.Context) {
 	var ctx = context.New(c)
 
 	if err := h.service.DeleteTask(ctx, taskId.Value); err != nil {
-		httpError.SetError(c, http.StatusInternalServerError, err)
+		code := http.StatusInternalServerError
+		if errors.Is(repository.ErrNotFound, err) {
+			code = http.StatusNotFound
+		}
+		httpError.SetError(c, code, err)
 
 		return
 	}
