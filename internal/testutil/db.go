@@ -61,7 +61,7 @@ func WithTx(t *testing.T, fn func(ctx context.Context, tx pgx.Tx)) {
 	t.Helper()
 
 	// небольшой timeout, чтобы тесты не зависали
-	ctx := context.NewWithTimeout(context.Empty(), 205*time.Second)
+	ctx := context.NewWithTimeout(context.Empty(), 5*time.Second)
 	t.Cleanup(ctx.Cancel)
 
 	tx, err := GetPool(t).Begin(ctx)

@@ -28,6 +28,6 @@ func NewTitle(title string) (*Title, error) {
 	return &t, nil
 }
 
-func (d Title) String() string {
-	return string(d)
+func (t Title) String() string {
+	return string(t)
 }

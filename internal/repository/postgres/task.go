@@ -6,10 +6,13 @@ import (
 
 	"github.com/Nikkoz/task-service/internal/domain/task"
 	"github.com/Nikkoz/task-service/internal/repository"
+	"github.com/Nikkoz/task-service/internal/service"
 	"github.com/Nikkoz/task-service/pkg/context"
 	"github.com/Nikkoz/task-service/pkg/logger"
 	"github.com/jackc/pgx/v5"
 )
+
+var _ service.TaskRepository = (*TaskRepo)(nil)
 
 type TaskRepo struct {
 	db DBTX
