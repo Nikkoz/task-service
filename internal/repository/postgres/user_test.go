@@ -29,7 +29,7 @@ func TestUserRepo_CreateAndGetByID(t *testing.T) {
 		assertion := assert.New(t)
 
 		email, _ := user.NewEmail("test@example.com")
-		password, _ := user.NewPassword("password")
+		password, _ := user.NewPasswordHash("password")
 
 		created, err := repo.Create(ctx, user.User{
 			Email:        *email,
@@ -51,7 +51,7 @@ func TestUserRepo_GetByEmail(t *testing.T) {
 		assertion := assert.New(t)
 
 		email, _ := user.NewEmail("test@example.com")
-		password, _ := user.NewPassword("password")
+		password, _ := user.NewPasswordHash("password")
 
 		created, err := repo.Create(ctx, user.User{
 			Email:        *email,
@@ -72,7 +72,7 @@ func TestUserRepo_Create_DuplicateEmail(t *testing.T) {
 		assertion := assert.New(t)
 
 		email, _ := user.NewEmail("test@example.com")
-		password, _ := user.NewPassword("password")
+		password, _ := user.NewPasswordHash("password")
 
 		_, err := repo.Create(ctx, user.User{
 			Email:        *email,

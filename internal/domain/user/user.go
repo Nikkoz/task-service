@@ -9,7 +9,7 @@ type User struct {
 	Email Email
 
 	// PasswordHash is a user's hash of password.
-	PasswordHash Password
+	PasswordHash PasswordHash
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

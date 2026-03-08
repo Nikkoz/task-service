@@ -14,3 +14,5 @@ type Service interface {
 	UpdateTask(ctx context.Context, id uint64, in service.UpdateTaskInput) (task.Task, error)
 	DeleteTask(ctx context.Context, id uint64) error
 }
+
+var _ Service = (*service.TaskService)(nil)
