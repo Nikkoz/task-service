@@ -48,7 +48,7 @@ func Run() {
 		authService    = service.NewAuthService(userRepo, passwordHasher, tokenManager)
 
 		isProduction = cfg.App.Environment.IsProduction()
-		listenerHttp = http.NewServer(taskService, authService, isProduction, cfg.Auth, http.Options{})
+		listenerHttp = http.NewServer(taskService, authService, tokenManager, isProduction, http.Options{})
 	)
 
 	listenerHttp.Run(cfg.Http)

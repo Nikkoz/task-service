@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Nikkoz/task-service/internal/config"
+	"github.com/Nikkoz/task-service/internal/service"
 	"github.com/Nikkoz/task-service/internal/transport/http/auth"
 	"github.com/Nikkoz/task-service/internal/transport/http/task"
 	"github.com/gin-gonic/gin"
@@ -21,11 +22,11 @@ type (
 	}
 )
 
-func NewServer(taskService task.Service, authService auth.Service, isProd bool, authCfg config.Auth, o Options) *Server {
+func NewServer(taskService task.Service, authService auth.Service, tokenManager service.TokenManager, isProd bool, o Options) *Server {
 	taskHandler := task.NewHandler(taskService)
 	authHandler := auth.NewHandler(authService)
 
-	route := newRouter(taskHandler, authHandler, isProd, authCfg)
+	route := newRouter(taskHandler, authHandler, tokenManager, isProd)
 
 	s := &Server{
 		router: route,
