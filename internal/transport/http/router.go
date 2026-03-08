@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/Nikkoz/task-service/internal/config"
+	"github.com/Nikkoz/task-service/internal/transport/http/auth"
 	"github.com/Nikkoz/task-service/internal/transport/http/middlewares"
 	"github.com/Nikkoz/task-service/internal/transport/http/task"
 	"github.com/gin-gonic/gin"
 )
 
-func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.Engine {
+func newRouter(taskHandler *task.Handler, authHandler *auth.Handler, isProd bool, authCfg config.Auth) *gin.Engine {
 	if isProd {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -20,7 +21,7 @@ func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.En
 
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	router.Use(middlewares.Auth(auth))
+	router.Use(middlewares.Auth(authCfg))
 	router.Use(middlewares.RequestID())
 
 	router.GET("/health", func(c *gin.Context) {
@@ -30,6 +31,7 @@ func newRouter(taskHandler *task.Handler, isProd bool, auth config.Auth) *gin.En
 	})
 
 	task.RegisterRoutes(router.Group("/tasks"), taskHandler)
+	auth.RegisterRoutes(router.Group("/auth"), authHandler)
 
 	return router
 }

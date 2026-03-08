@@ -10,6 +10,8 @@ import (
 	"github.com/Nikkoz/task-service/internal/config"
 	"github.com/Nikkoz/task-service/internal/repository/postgres"
 	"github.com/Nikkoz/task-service/internal/service"
+	"github.com/Nikkoz/task-service/internal/service/password"
+	"github.com/Nikkoz/task-service/internal/service/token"
 	"github.com/Nikkoz/task-service/internal/transport/http"
 	"github.com/Nikkoz/task-service/pkg/context"
 	"github.com/Nikkoz/task-service/pkg/logger"
@@ -40,8 +42,13 @@ func Run() {
 		taskRepo    = postgres.NewTaskRepo(db)
 		taskService = service.NewTaskService(taskRepo)
 
+		userRepo       = postgres.NewUserRepo(db)
+		passwordHasher = password.NewBcryptHasher(cfg.Auth.Cost)
+		tokenManager   = token.NewJWTManager(cfg.Auth.JwtSecret, cfg.Auth.JwtTtl)
+		authService    = service.NewAuthService(userRepo, passwordHasher, tokenManager)
+
 		isProduction = cfg.App.Environment.IsProduction()
-		listenerHttp = http.NewServer(taskService, isProduction, cfg.Auth, http.Options{})
+		listenerHttp = http.NewServer(taskService, authService, isProduction, cfg.Auth, http.Options{})
 	)
 
 	listenerHttp.Run(cfg.Http)

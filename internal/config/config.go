@@ -46,7 +46,10 @@ type (
 	}
 
 	Auth struct {
-		Token string `env:"TOKEN,required"`
+		Token     string        `env:"TOKEN,required"`
+		Cost      int           `env:"BCRYPT_COST" envDefault:"10"`
+		JwtSecret string        `env:"JWT_SECRET,required"`
+		JwtTtl    time.Duration `env:"JWT_TTL" envDefault:"15m"`
 	}
 
 	Log struct {
