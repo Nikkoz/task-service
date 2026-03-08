@@ -37,6 +37,34 @@ func (_m *TokenManager) Generate(userID uint64) (string, error) {
 	return r0, r1
 }
 
+// Parse provides a mock function with given fields: token
+func (_m *TokenManager) Parse(token string) (uint64, error) {
+	ret := _m.Called(token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Parse")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (uint64, error)); ok {
+		return rf(token)
+	}
+	if rf, ok := ret.Get(0).(func(string) uint64); ok {
+		r0 = rf(token)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewTokenManager creates a new instance of TokenManager. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewTokenManager(t interface {
