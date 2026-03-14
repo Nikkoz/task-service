@@ -88,7 +88,7 @@ func TestAuthService_Register_DuplicateEmail(t *testing.T) {
 
 	assertion := assert.New(t)
 	assertion.Error(err)
-	assertion.True(errors.Is(err, repository.ErrAlreadyExists))
+	assertion.ErrorAs(err, &repository.ErrAlreadyExists)
 
 	hasher.AssertExpectations(t)
 	users.AssertExpectations(t)
@@ -194,9 +194,10 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 		Once()
 
 	_, err := svc.Login(context.Empty(), in)
+
 	assertion := assert.New(t)
 	assertion.Error(err)
-	assertion.True(errors.Is(err, ErrInvalidCredentials))
+	assertion.ErrorAs(err, &repository.ErrNotFound)
 
 	users.AssertExpectations(t)
 	hasher.AssertExpectations(t)
@@ -235,9 +236,10 @@ func TestAuthService_Login_WrongPassword(t *testing.T) {
 		Once()
 
 	_, err := svc.Login(context.Empty(), in)
+
 	assertion := assert.New(t)
 	assertion.Error(err)
-	assertion.True(errors.Is(err, ErrInvalidCredentials))
+	assertion.ErrorAs(err, &ErrInvalidCredentials)
 
 	users.AssertExpectations(t)
 	hasher.AssertExpectations(t)

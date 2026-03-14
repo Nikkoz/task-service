@@ -20,12 +20,15 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var userIdentifier uint64 = 1
+
 func setupRouter(uc *mocks.Service) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
 	r := gin.New()
 	h := NewHandler(uc)
 
+	r.Use(injectUserId(userIdentifier))
 	RegisterRoutes(r.Group("/tasks"), h)
 
 	return r
@@ -191,7 +194,7 @@ func TestUpdate_InvalidJSON(t *testing.T) {
 
 	req := httptest.NewRequest(
 		http.MethodPut,
-		"/tasks/1",
+		"/tasks/1?user_id=1",
 		strings.NewReader(`{"title":`),
 	)
 	req.Header.Set("Content-Type", "application/json")
@@ -254,6 +257,7 @@ func TestUpdate_Error(t *testing.T) {
 			"UpdateTask",
 			mock.Anything,
 			taskID,
+			userIdentifier,
 			mock.MatchedBy(func(in service.UpdateTaskInput) bool {
 				return in.Title == titleRaw &&
 					in.Description == descriptionRaw &&
@@ -313,6 +317,7 @@ func TestUpdate_Success(t *testing.T) {
 
 	updated := task.Task{
 		ID:          taskID,
+		UserID:      userIdentifier,
 		Title:       *title,
 		Description: *description,
 		Status:      *status,
@@ -326,6 +331,7 @@ func TestUpdate_Success(t *testing.T) {
 			"UpdateTask",
 			mock.Anything,
 			taskID,
+			userIdentifier,
 			mock.MatchedBy(func(in service.UpdateTaskInput) bool {
 				return in.Title == titleRaw &&
 					in.Description == descriptionRaw &&
@@ -404,7 +410,7 @@ func TestGet_NotFound(t *testing.T) {
 	taskID := uint64(1)
 
 	svc.
-		On("GetTask", mock.Anything, taskID).
+		On("GetTask", mock.Anything, taskID, userIdentifier).
 		Return(task.Task{}, repository.ErrNotFound).
 		Once()
 
@@ -429,7 +435,7 @@ func TestGet_Error(t *testing.T) {
 	taskID := uint64(1)
 
 	svc.
-		On("GetTask", mock.Anything, taskID).
+		On("GetTask", mock.Anything, taskID, userIdentifier).
 		Return(task.Task{}, errors.New("get error")).
 		Once()
 
@@ -464,6 +470,7 @@ func TestGet_Success(t *testing.T) {
 
 	got := task.Task{
 		ID:          taskID,
+		UserID:      userIdentifier,
 		Title:       *title,
 		Description: *description,
 		Status:      *status,
@@ -473,7 +480,7 @@ func TestGet_Success(t *testing.T) {
 	}
 
 	svc.
-		On("GetTask", mock.Anything, taskID).
+		On("GetTask", mock.Anything, taskID, userIdentifier).
 		Return(got, nil).
 		Once()
 
@@ -530,7 +537,7 @@ func TestDelete_NotFound(t *testing.T) {
 	taskID := uint64(1)
 
 	svc.
-		On("DeleteTask", mock.Anything, taskID).
+		On("DeleteTask", mock.Anything, taskID, userIdentifier).
 		Return(repository.ErrNotFound).
 		Once()
 
@@ -555,7 +562,7 @@ func TestDelete_Error(t *testing.T) {
 	taskID := uint64(1)
 
 	svc.
-		On("DeleteTask", mock.Anything, taskID).
+		On("DeleteTask", mock.Anything, taskID, userIdentifier).
 		Return(errors.New("delete error")).
 		Once()
 
@@ -580,7 +587,7 @@ func TestDelete_Success(t *testing.T) {
 	taskID := uint64(1)
 
 	svc.
-		On("DeleteTask", mock.Anything, taskID).
+		On("DeleteTask", mock.Anything, taskID, userIdentifier).
 		Return(nil).
 		Once()
 
@@ -606,7 +613,7 @@ func TestList_Error(t *testing.T) {
 	r := setupRouter(svc)
 
 	svc.
-		On("ListTasks", mock.Anything, uint64(10), uint64(10)).
+		On("ListTasks", mock.Anything, userIdentifier, uint64(10), uint64(10)).
 		Return([]task.Task{}, errors.New("list error")).
 		Once()
 
@@ -629,7 +636,7 @@ func TestList_Success(t *testing.T) {
 	r := setupRouter(svc)
 
 	svc.
-		On("ListTasks", mock.Anything, uint64(10), uint64(0)).
+		On("ListTasks", mock.Anything, userIdentifier, uint64(10), uint64(0)).
 		Return([]task.Task{}, nil).
 		Once()
 

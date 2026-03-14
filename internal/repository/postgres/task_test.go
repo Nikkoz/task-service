@@ -4,35 +4,30 @@ package postgres
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/Nikkoz/task-service/internal/domain/task"
+	"github.com/Nikkoz/task-service/internal/repository"
 	"github.com/Nikkoz/task-service/internal/testutil"
 	"github.com/Nikkoz/task-service/pkg/context"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	_ = os.Setenv("ENV_FILE", ".testing")
-
-	code := m.Run()
-
-	testutil.ClosePool()
-	os.Exit(code)
-}
-
 func TestTaskRepo_CreateGet(t *testing.T) {
 	testutil.WithTx(t, func(ctx context.Context, tx pgx.Tx) {
 		repo := NewTaskRepo(tx)
 		assertion := assert.New(t)
 
+		u, err := createUser(t, ctx, tx, "test@example.com")
+		assertion.NoError(err)
+
 		title, _ := task.NewTitle("test")
 		descr, _ := task.NewDescription("test description")
 		due, _ := task.NewDueDate(time.Now().Add(24 * time.Hour))
 		model := task.Task{
+			UserID:      u.ID,
 			Title:       *title,
 			Description: *descr,
 			Status:      task.StatusPlanned,
@@ -42,9 +37,10 @@ func TestTaskRepo_CreateGet(t *testing.T) {
 		created, err := repo.Create(ctx, model)
 		assertion.NoError(err)
 
-		got, err := repo.GetByID(ctx, created.ID)
+		got, err := repo.GetByID(ctx, created.ID, u.ID)
 
 		assertion.NoError(err)
+		assertion.Equal(model.UserID, got.UserID)
 		assertion.Equal(model.Title, got.Title)
 		assertion.Equal(model.Description, got.Description)
 		assertion.Equal(model.Status, got.Status)
@@ -55,6 +51,35 @@ func TestTaskRepo_CreateGet(t *testing.T) {
 	})
 }
 
+func TestTaskRepo_Get_NotFoundForUser(t *testing.T) {
+	testutil.WithTx(t, func(ctx context.Context, tx pgx.Tx) {
+		repo := NewTaskRepo(tx)
+		assertion := assert.New(t)
+
+		u, err := createUser(t, ctx, tx, "test@example.com")
+		assertion.NoError(err)
+
+		title, _ := task.NewTitle("test")
+		descr, _ := task.NewDescription("test description")
+		due, _ := task.NewDueDate(time.Now().Add(24 * time.Hour))
+		model := task.Task{
+			UserID:      u.ID,
+			Title:       *title,
+			Description: *descr,
+			Status:      task.StatusPlanned,
+			DueDate:     due,
+		}
+
+		created, err := repo.Create(ctx, model)
+		assertion.NoError(err)
+
+		_, err = repo.GetByID(ctx, created.ID, uint64(1))
+
+		assertion.Error(err)
+		assertion.ErrorAs(err, &repository.ErrNotFound)
+	})
+}
+
 func TestTaskRepo_List_LimitOffset(t *testing.T) {
 	testutil.WithTx(t, func(ctx context.Context, tx pgx.Tx) {
 		truncate(t, ctx, tx)
@@ -62,23 +87,24 @@ func TestTaskRepo_List_LimitOffset(t *testing.T) {
 		repo := NewTaskRepo(tx)
 		assertion := assert.New(t)
 
+		u, err := createUser(t, ctx, tx, "test@example.com")
+		assertion.NoError(err)
+
 		created := make([]task.Task, 0, 3)
 
 		for i := 1; i <= 3; i++ {
-			title, _ := task.NewTitle(fmt.Sprintf("list-%d", i))
-			desc, _ := task.NewDescription("description")
-			due, _ := task.NewDueDate(time.Now().Add(time.Duration(i) * time.Hour))
-
-			out, err := repo.Create(ctx, task.Task{
-				Title:       *title,
-				Description: *desc,
-				Status:      task.StatusPlanned,
-				DueDate:     due,
-			})
+			out, err := createTask(ctx, repo, u.ID, i)
 			assertion.NoError(err)
 
 			created = append(created, out)
 		}
+
+		// create task for another user
+		wu, err := createUser(t, ctx, tx, "test2@example.com")
+		assertion.NoError(err)
+
+		_, err = createTask(ctx, repo, wu.ID, 4)
+		assertion.NoError(err)
 
 		expectedAll := reverseIDs(created)
 		cases := []struct {
@@ -93,10 +119,14 @@ func TestTaskRepo_List_LimitOffset(t *testing.T) {
 
 		for _, c := range cases {
 			t.Run(c.name, func(t *testing.T) {
-				got, err := repo.List(ctx, c.limit, c.offset)
+				got, err := repo.List(ctx, u.ID, c.limit, c.offset)
 				assertion.NoError(err)
 				assertion.Len(got, len(c.wantIdx))
 				assertion.Equal(c.wantIdx, taskIDs(got))
+
+				for _, g := range got {
+					assertion.NotEqual(wu.ID, g.UserID)
+				}
 			})
 		}
 	})
@@ -107,11 +137,15 @@ func TestTaskRepo_Update(t *testing.T) {
 		repo := NewTaskRepo(tx)
 		assertion := assert.New(t)
 
+		u, err := createUser(t, ctx, tx, "test@example.com")
+		assertion.NoError(err)
+
 		title, _ := task.NewTitle("before")
 		desc, _ := task.NewDescription("before-desc")
 		due, _ := task.NewDueDate(time.Now().Add(time.Hour))
 
 		created, err := repo.Create(ctx, task.Task{
+			UserID:      u.ID,
 			Title:       *title,
 			Description: *desc,
 			Status:      task.StatusPlanned,
@@ -125,6 +159,7 @@ func TestTaskRepo_Update(t *testing.T) {
 
 		updated, err := repo.Update(ctx, task.Task{
 			ID:          created.ID,
+			UserID:      u.ID,
 			Title:       *newTitle,
 			Description: *newDesc,
 			Status:      task.StatusDone,
@@ -140,9 +175,10 @@ func TestTaskRepo_Update(t *testing.T) {
 		)
 
 		// verify persisted
-		got, err := repo.GetByID(ctx, created.ID)
+		got, err := repo.GetByID(ctx, created.ID, u.ID)
 		assertion.NoError(err)
 		assertion.Equal(updated.ID, got.ID)
+		assertion.Equal(updated.UserID, got.UserID)
 		assertion.Equal(updated.Title, got.Title)
 		assertion.Equal(updated.Description, got.Description)
 		assertion.Equal(updated.Status, got.Status)
@@ -158,10 +194,14 @@ func TestTaskRepo_Delete(t *testing.T) {
 		repo := NewTaskRepo(tx)
 		assertion := assert.New(t)
 
+		u, err := createUser(t, ctx, tx, "test@example.com")
+		assertion.NoError(err)
+
 		title, _ := task.NewTitle("to-delete")
 		desc, _ := task.NewDescription("d")
 
 		created, err := repo.Create(ctx, task.Task{
+			UserID:      u.ID,
 			Title:       *title,
 			Description: *desc,
 			Status:      task.StatusPlanned,
@@ -169,10 +209,10 @@ func TestTaskRepo_Delete(t *testing.T) {
 		})
 		assertion.NoError(err)
 
-		err = repo.Delete(ctx, created.ID)
+		err = repo.Delete(ctx, created.ID, u.ID)
 		assertion.NoError(err)
 
-		_, err = repo.GetByID(ctx, created.ID)
+		_, err = repo.GetByID(ctx, created.ID, u.ID)
 		assertion.Error(err)
 	})
 }
@@ -204,4 +244,18 @@ func truncate(t *testing.T, ctx context.Context, tx pgx.Tx) {
 	if err != nil {
 		t.Fatalf("truncate tasks: %v", err)
 	}
+}
+
+func createTask(ctx context.Context, repo *TaskRepo, userId uint64, i int) (task.Task, error) {
+	title, _ := task.NewTitle(fmt.Sprintf("list-%d", i))
+	desc, _ := task.NewDescription("description")
+	due, _ := task.NewDueDate(time.Now().Add(time.Duration(i) * time.Hour))
+
+	return repo.Create(ctx, task.Task{
+		UserID:      userId,
+		Title:       *title,
+		Description: *desc,
+		Status:      task.StatusPlanned,
+		DueDate:     due,
+	})
 }

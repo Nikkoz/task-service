@@ -5,6 +5,9 @@ import "time"
 type Task struct {
 	ID uint64
 
+	// UserID is a foreign key to the user table.
+	UserID uint64
+
 	// Title is a short title (max 100 chars in DB).
 	Title Title
 

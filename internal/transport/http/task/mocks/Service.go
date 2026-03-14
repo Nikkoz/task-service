@@ -45,17 +45,17 @@ func (_m *Service) CreateTask(ctx context.Context, in service.CreateTaskInput) (
 	return r0, r1
 }
 
-// DeleteTask provides a mock function with given fields: ctx, id
-func (_m *Service) DeleteTask(ctx context.Context, id uint64) error {
-	ret := _m.Called(ctx, id)
+// DeleteTask provides a mock function with given fields: ctx, id, userID
+func (_m *Service) DeleteTask(ctx context.Context, id uint64, userID uint64) error {
+	ret := _m.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteTask")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {
+		r0 = rf(ctx, id, userID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -63,9 +63,9 @@ func (_m *Service) DeleteTask(ctx context.Context, id uint64) error {
 	return r0
 }
 
-// GetTask provides a mock function with given fields: ctx, id
-func (_m *Service) GetTask(ctx context.Context, id uint64) (task.Task, error) {
-	ret := _m.Called(ctx, id)
+// GetTask provides a mock function with given fields: ctx, id, userID
+func (_m *Service) GetTask(ctx context.Context, id uint64, userID uint64) (task.Task, error) {
+	ret := _m.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTask")
@@ -73,17 +73,17 @@ func (_m *Service) GetTask(ctx context.Context, id uint64) (task.Task, error) {
 
 	var r0 task.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) (task.Task, error)); ok {
-		return rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) (task.Task, error)); ok {
+		return rf(ctx, id, userID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) task.Task); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) task.Task); ok {
+		r0 = rf(ctx, id, userID)
 	} else {
 		r0 = ret.Get(0).(task.Task)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64) error); ok {
+		r1 = rf(ctx, id, userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -91,9 +91,9 @@ func (_m *Service) GetTask(ctx context.Context, id uint64) (task.Task, error) {
 	return r0, r1
 }
 
-// ListTasks provides a mock function with given fields: ctx, limit, offset
-func (_m *Service) ListTasks(ctx context.Context, limit uint64, offset uint64) ([]task.Task, error) {
-	ret := _m.Called(ctx, limit, offset)
+// ListTasks provides a mock function with given fields: ctx, userID, limit, offset
+func (_m *Service) ListTasks(ctx context.Context, userID uint64, limit uint64, offset uint64) ([]task.Task, error) {
+	ret := _m.Called(ctx, userID, limit, offset)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListTasks")
@@ -101,19 +101,19 @@ func (_m *Service) ListTasks(ctx context.Context, limit uint64, offset uint64) (
 
 	var r0 []task.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) ([]task.Task, error)); ok {
-		return rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64) ([]task.Task, error)); ok {
+		return rf(ctx, userID, limit, offset)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) []task.Task); ok {
-		r0 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64) []task.Task); ok {
+		r0 = rf(ctx, userID, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]task.Task)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64) error); ok {
-		r1 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, uint64) error); ok {
+		r1 = rf(ctx, userID, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -121,9 +121,9 @@ func (_m *Service) ListTasks(ctx context.Context, limit uint64, offset uint64) (
 	return r0, r1
 }
 
-// UpdateTask provides a mock function with given fields: ctx, id, in
-func (_m *Service) UpdateTask(ctx context.Context, id uint64, in service.UpdateTaskInput) (task.Task, error) {
-	ret := _m.Called(ctx, id, in)
+// UpdateTask provides a mock function with given fields: ctx, id, userID, in
+func (_m *Service) UpdateTask(ctx context.Context, id uint64, userID uint64, in service.UpdateTaskInput) (task.Task, error) {
+	ret := _m.Called(ctx, id, userID, in)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateTask")
@@ -131,17 +131,17 @@ func (_m *Service) UpdateTask(ctx context.Context, id uint64, in service.UpdateT
 
 	var r0 task.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, service.UpdateTaskInput) (task.Task, error)); ok {
-		return rf(ctx, id, in)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, service.UpdateTaskInput) (task.Task, error)); ok {
+		return rf(ctx, id, userID, in)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, service.UpdateTaskInput) task.Task); ok {
-		r0 = rf(ctx, id, in)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, service.UpdateTaskInput) task.Task); ok {
+		r0 = rf(ctx, id, userID, in)
 	} else {
 		r0 = ret.Get(0).(task.Task)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, service.UpdateTaskInput) error); ok {
-		r1 = rf(ctx, id, in)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, service.UpdateTaskInput) error); ok {
+		r1 = rf(ctx, id, userID, in)
 	} else {
 		r1 = ret.Error(1)
 	}

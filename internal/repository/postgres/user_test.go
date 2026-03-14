@@ -1,8 +1,8 @@
+//go:build integration
+
 package postgres
 
 import (
-	"errors"
-	"os"
 	"testing"
 
 	"github.com/Nikkoz/task-service/internal/testutil"
@@ -13,15 +13,6 @@ import (
 	"github.com/Nikkoz/task-service/internal/domain/user"
 	"github.com/Nikkoz/task-service/internal/repository"
 )
-
-func TestMain(m *testing.M) {
-	_ = os.Setenv("ENV_FILE", ".testing")
-
-	code := m.Run()
-
-	testutil.ClosePool()
-	os.Exit(code)
-}
 
 func TestUserRepo_CreateAndGetByID(t *testing.T) {
 	testutil.WithTx(t, func(ctx context.Context, tx pgx.Tx) {
@@ -84,8 +75,8 @@ func TestUserRepo_Create_DuplicateEmail(t *testing.T) {
 			Email:        *email,
 			PasswordHash: "hash",
 		})
-		assertion.Error(err)
 
-		assertion.True(errors.Is(err, repository.ErrAlreadyExists))
+		assertion.Error(err)
+		assertion.ErrorAs(err, &repository.ErrAlreadyExists)
 	})
 }

@@ -42,17 +42,17 @@ func (_m *TaskRepository) Create(ctx context.Context, t task.Task) (task.Task, e
 	return r0, r1
 }
 
-// Delete provides a mock function with given fields: ctx, id
-func (_m *TaskRepository) Delete(ctx context.Context, id uint64) error {
-	ret := _m.Called(ctx, id)
+// Delete provides a mock function with given fields: ctx, userID, id
+func (_m *TaskRepository) Delete(ctx context.Context, userID uint64, id uint64) error {
+	ret := _m.Called(ctx, userID, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {
+		r0 = rf(ctx, userID, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -60,9 +60,9 @@ func (_m *TaskRepository) Delete(ctx context.Context, id uint64) error {
 	return r0
 }
 
-// GetByID provides a mock function with given fields: ctx, id
-func (_m *TaskRepository) GetByID(ctx context.Context, id uint64) (task.Task, error) {
-	ret := _m.Called(ctx, id)
+// GetByID provides a mock function with given fields: ctx, userID, id
+func (_m *TaskRepository) GetByID(ctx context.Context, userID uint64, id uint64) (task.Task, error) {
+	ret := _m.Called(ctx, userID, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
@@ -70,17 +70,17 @@ func (_m *TaskRepository) GetByID(ctx context.Context, id uint64) (task.Task, er
 
 	var r0 task.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) (task.Task, error)); ok {
-		return rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) (task.Task, error)); ok {
+		return rf(ctx, userID, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) task.Task); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) task.Task); ok {
+		r0 = rf(ctx, userID, id)
 	} else {
 		r0 = ret.Get(0).(task.Task)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64) error); ok {
+		r1 = rf(ctx, userID, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -88,9 +88,9 @@ func (_m *TaskRepository) GetByID(ctx context.Context, id uint64) (task.Task, er
 	return r0, r1
 }
 
-// List provides a mock function with given fields: ctx, limit, offset
-func (_m *TaskRepository) List(ctx context.Context, limit uint64, offset uint64) ([]task.Task, error) {
-	ret := _m.Called(ctx, limit, offset)
+// List provides a mock function with given fields: ctx, userID, limit, offset
+func (_m *TaskRepository) List(ctx context.Context, userID uint64, limit uint64, offset uint64) ([]task.Task, error) {
+	ret := _m.Called(ctx, userID, limit, offset)
 
 	if len(ret) == 0 {
 		panic("no return value specified for List")
@@ -98,19 +98,19 @@ func (_m *TaskRepository) List(ctx context.Context, limit uint64, offset uint64)
 
 	var r0 []task.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) ([]task.Task, error)); ok {
-		return rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64) ([]task.Task, error)); ok {
+		return rf(ctx, userID, limit, offset)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) []task.Task); ok {
-		r0 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64) []task.Task); ok {
+		r0 = rf(ctx, userID, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]task.Task)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64) error); ok {
-		r1 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, uint64) error); ok {
+		r1 = rf(ctx, userID, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -30,6 +30,7 @@ func (h *Handler) Create(c *gin.Context) {
 	var ctx = context.New(c)
 
 	out, err := h.service.CreateTask(ctx, service.CreateTaskInput{
+		UserID:      req.UserID,
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
@@ -56,6 +57,13 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
+	userId, err := getUserID(c)
+	if err != nil {
+		httpError.SetError(c, http.StatusUnauthorized, err)
+
+		return
+	}
+
 	req, err := getRequest(c)
 	if err != nil {
 		httpError.SetError(c, http.StatusBadRequest, err)
@@ -65,7 +73,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var ctx = context.New(c)
 
-	out, err := h.service.UpdateTask(ctx, taskId.Value, service.UpdateTaskInput{
+	out, err := h.service.UpdateTask(ctx, taskId.Value, userId.Value, service.UpdateTaskInput{
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
@@ -92,9 +100,16 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
+	userId, err := getUserID(c)
+	if err != nil {
+		httpError.SetError(c, http.StatusUnauthorized, err)
+
+		return
+	}
+
 	var ctx = context.New(c)
 
-	out, err := h.service.GetTask(ctx, taskId.Value)
+	out, err := h.service.GetTask(ctx, taskId.Value, userId.Value)
 	if err != nil {
 		code := http.StatusInternalServerError
 		if errors.Is(err, repository.ErrNotFound) {
@@ -110,6 +125,13 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 func (h *Handler) List(c *gin.Context) {
+	userId, err := getUserID(c)
+	if err != nil {
+		httpError.SetError(c, http.StatusUnauthorized, err)
+
+		return
+	}
+
 	page, limit := getPagination(c)
 	if page > 0 {
 		page = page - 1
@@ -117,7 +139,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	var ctx = context.New(c)
 
-	out, err := h.service.ListTasks(ctx, limit, page*limit)
+	out, err := h.service.ListTasks(ctx, userId.Value, limit, page*limit)
 	if err != nil {
 		httpError.SetError(c, http.StatusInternalServerError, err)
 
@@ -128,6 +150,13 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
+	userId, err := getUserID(c)
+	if err != nil {
+		httpError.SetError(c, http.StatusUnauthorized, err)
+
+		return
+	}
+
 	taskId, err := getId(c)
 	if err != nil {
 		httpError.SetError(c, http.StatusBadRequest, err)
@@ -137,7 +166,7 @@ func (h *Handler) Delete(c *gin.Context) {
 
 	var ctx = context.New(c)
 
-	if err := h.service.DeleteTask(ctx, taskId.Value); err != nil {
+	if err = h.service.DeleteTask(ctx, taskId.Value, userId.Value); err != nil {
 		code := http.StatusInternalServerError
 		if errors.Is(err, repository.ErrNotFound) {
 			code = http.StatusNotFound

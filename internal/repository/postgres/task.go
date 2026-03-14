@@ -24,22 +24,26 @@ func NewTaskRepo(db DBTX) *TaskRepo {
 
 func (r *TaskRepo) Create(ctx context.Context, t task.Task) (task.Task, error) {
 	const q = `
-		INSERT INTO tasks (title, description, status, due_date)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, title, description, status, due_date, created_at, updated_at
+		INSERT INTO tasks (user_id, title, description, status, due_date)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, user_id, title, description, status, due_date, created_at, updated_at
 	`
 
-	var out task.Task
-	var status string
-	var due *time.Time
+	var (
+		out    task.Task
+		status string
+		due    *time.Time
+	)
 
 	err := r.db.QueryRow(ctx, q,
+		t.UserID,
 		t.Title,
 		t.Description,
 		string(t.Status),
 		t.DueDate.DateTime(),
 	).Scan(
 		&out.ID,
+		&out.UserID,
 		&out.Title,
 		&out.Description,
 		&status,
@@ -62,26 +66,29 @@ func (r *TaskRepo) Create(ctx context.Context, t task.Task) (task.Task, error) {
 func (r *TaskRepo) Update(ctx context.Context, t task.Task) (task.Task, error) {
 	const q = `
 		UPDATE tasks
-		SET title = $2,
-		    description = $3,
-		    status = $4,
-		    due_date = $5
-		WHERE id = $1
-		RETURNING id, title, description, status, due_date, created_at, updated_at
+		SET title = $3,
+		    description = $4,
+		    status = $5,
+		    due_date = $6
+		WHERE id = $1 AND user_id = $2
+		RETURNING id, user_id, title, description, status, due_date, created_at, updated_at
 	`
-
-	var out task.Task
-	var status string
-	var due *time.Time
+	var (
+		out    task.Task
+		status string
+		due    *time.Time
+	)
 
 	err := r.db.QueryRow(ctx, q,
 		t.ID,
+		t.UserID,
 		t.Title,
 		t.Description,
 		string(t.Status),
 		t.DueDate.DateTime(),
 	).Scan(
 		&out.ID,
+		&out.UserID,
 		&out.Title,
 		&out.Description,
 		&status,
@@ -105,19 +112,22 @@ func (r *TaskRepo) Update(ctx context.Context, t task.Task) (task.Task, error) {
 	return out, nil
 }
 
-func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
+func (r *TaskRepo) GetByID(ctx context.Context, id, userID uint64) (task.Task, error) {
 	const q = `
-		SELECT id, title, description, status, due_date, created_at, updated_at
+		SELECT id, user_id, title, description, status, due_date, created_at, updated_at
 		FROM tasks
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
-	var out task.Task
-	var status string
-	var due *time.Time
+	var (
+		out    task.Task
+		status string
+		due    *time.Time
+	)
 
-	err := r.db.QueryRow(ctx, q, id).Scan(
+	err := r.db.QueryRow(ctx, q, id, userID).Scan(
 		&out.ID,
+		&out.UserID,
 		&out.Title,
 		&out.Description,
 		&status,
@@ -141,15 +151,16 @@ func (r *TaskRepo) GetByID(ctx context.Context, id uint64) (task.Task, error) {
 	return out, nil
 }
 
-func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task, error) {
+func (r *TaskRepo) List(ctx context.Context, userID uint64, limit, offset uint64) ([]task.Task, error) {
 	const q = `
-		SELECT id, title, description, status, due_date, created_at, updated_at
+		SELECT id, user_id, title, description, status, due_date, created_at, updated_at
 		FROM tasks
+		WHERE user_id = $1
 		ORDER BY id DESC
-		LIMIT $1 OFFSET $2
+		LIMIT $2 OFFSET $3
 	`
 
-	rows, err := r.db.Query(ctx, q, limit, offset)
+	rows, err := r.db.Query(ctx, q, userID, limit, offset)
 	if err != nil {
 		return nil, logger.ErrorWithContext(ctx, err)
 	}
@@ -157,12 +168,15 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 
 	out := make([]task.Task, 0, limit)
 	for rows.Next() {
-		var t task.Task
-		var status string
-		var due *time.Time
+		var (
+			t      task.Task
+			status string
+			due    *time.Time
+		)
 
 		if err := rows.Scan(
 			&t.ID,
+			&t.UserID,
 			&t.Title,
 			&t.Description,
 			&status,
@@ -188,10 +202,10 @@ func (r *TaskRepo) List(ctx context.Context, limit, offset uint64) ([]task.Task,
 	return out, nil
 }
 
-func (r *TaskRepo) Delete(ctx context.Context, id uint64) error {
-	const q = `DELETE FROM tasks WHERE id = $1`
+func (r *TaskRepo) Delete(ctx context.Context, id, userID uint64) error {
+	const q = `DELETE FROM tasks WHERE id = $1 AND user_id = $2`
 
-	ct, err := r.db.Exec(ctx, q, id)
+	ct, err := r.db.Exec(ctx, q, id, userID)
 	if err != nil {
 		return logger.ErrorWithContext(ctx, err)
 	}

@@ -1,6 +1,7 @@
 package task
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -19,7 +20,12 @@ type (
 		Value uint64 `json:"id" uri:"id" binding:"required"`
 	}
 
+	userID struct {
+		Value uint64 `json:"user_id" uri:"user_id" binding:"required"`
+	}
+
 	request struct {
+		UserID      uint64     `json:"user_id"`
 		Title       string     `json:"title"`
 		Description string     `json:"description"`
 		Status      string     `json:"status"`
@@ -27,22 +33,38 @@ type (
 	}
 )
 
-func getRequest(c *gin.Context) (*request, error) {
-	r := request{}
-	if err := c.ShouldBindJSON(&r); err != nil {
+func getId(c *gin.Context) (*id, error) {
+	i := &id{}
+	if err := c.ShouldBindUri(i); err != nil {
 		return nil, logger.ErrorWithContext(context.New(c), err)
 	}
 
-	return &r, nil
+	return i, nil
 }
 
-func getId(c *gin.Context) (*id, error) {
-	id := &id{}
-	if err := c.ShouldBindUri(&id); err != nil {
+func getUserID(c *gin.Context) (*userID, error) {
+	value, ok := c.Get("user_id")
+	if !ok {
+		return nil, logger.ErrorWithContext(context.New(c), errors.New("user_id not found in context"))
+	}
+
+	uid, ok := value.(uint64)
+	if !ok || uid <= 0 {
+		return nil, logger.ErrorWithContext(context.New(c), errors.New("invalid user_id"))
+	}
+
+	return &userID{
+		Value: uid,
+	}, nil
+}
+
+func getRequest(c *gin.Context) (*request, error) {
+	r := &request{}
+	if err := c.ShouldBindJSON(r); err != nil {
 		return nil, logger.ErrorWithContext(context.New(c), err)
 	}
 
-	return id, nil
+	return r, nil
 }
 
 func getPagination(c *gin.Context) (uint64, uint64) {
